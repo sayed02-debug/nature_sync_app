@@ -2,77 +2,61 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'alarm_model.dart';
 
 class AlarmService {
-  static final FlutterLocalNotificationsPlugin _notificationsPlugin =
-  FlutterLocalNotificationsPlugin();
+  static final _notifications = FlutterLocalNotificationsPlugin();
 
+  static Future<void> init() async {
+    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const settings = InitializationSettings(android: android);
 
-  static Future<void> initializeNotifications() async {
-    const AndroidInitializationSettings androidSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const InitializationSettings initializationSettings =
-    InitializationSettings(android: androidSettings);
-
-    await _notificationsPlugin.initialize(initializationSettings);
-
-    await _createNotificationChannel();
+    await _notifications.initialize(settings);
+    await _createChannel();
   }
 
-  static Future<void> _createNotificationChannel() async {
-    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  static Future<void> _createChannel() async {
+    const channel = AndroidNotificationChannel(
       'alarm_channel',
       'Alarm Notifications',
-      description: 'Channel for nature sync alarm notifications',
       importance: Importance.high,
-      playSound: true,
     );
 
-    await _notificationsPlugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(channel);
+    await _notifications.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
   }
 
-
-  static Future<void> scheduleAlarmNotification(Alarm alarm) async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+  static Future<void> scheduleNotification(Alarm alarm) async {
+    const android = AndroidNotificationDetails(
       'alarm_channel',
       'Alarm Notifications',
-      channelDescription: 'Channel for nature sync alarm notifications',
       importance: Importance.high,
-      priority: Priority.high,
-      playSound: true,
     );
 
-    const NotificationDetails details = NotificationDetails(android: androidDetails);
+    const details = NotificationDetails(android: android);
 
-
-    await _notificationsPlugin.show(
+    await _notifications.show(
       alarm.id.hashCode,
-      '🌿 Nature Sync Alarm',
-      'Alarm for ${alarm.formattedTime} is ringing!',
+      'Nature Sync Alarm',
+      'Alarm for ${alarm.formattedTime}',
       details,
     );
   }
 
-  static Future<void> cancelAlarmNotification(Alarm alarm) async {
-    await _notificationsPlugin.cancel(alarm.id.hashCode);
+  static Future<void> cancelNotification(Alarm alarm) async {
+    await _notifications.cancel(alarm.id.hashCode);
   }
 
-  // Test notification
   static Future<void> testNotification() async {
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    const android = AndroidNotificationDetails(
       'alarm_channel',
       'Alarm Notifications',
-      channelDescription: 'Channel for nature sync alarm notifications',
       importance: Importance.high,
     );
 
-    const NotificationDetails details = NotificationDetails(android: androidDetails);
+    const details = NotificationDetails(android: android);
 
-    await _notificationsPlugin.show(
+    await _notifications.show(
       999,
-      'Nature Sync Test',
-      'Test notification from your app!',
+      'Test Notification',
+      'Nature Sync App is working!',
       details,
     );
   }

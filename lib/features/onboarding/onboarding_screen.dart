@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'onboarding_page.dart';
 import 'onboarding_model.dart';
+import '../location/location_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -16,94 +17,78 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+      body: Column(
         children: [
-          // Page View
-          PageView.builder(
-            controller: _pageController,
-            itemCount: OnboardingData.items.length,
-            onPageChanged: (int page) {
-              setState(() {
-                _currentPage = page;
-              });
-            },
-            itemBuilder: (context, index) {
-              return OnboardingPage(item: OnboardingData.items[index]);
-            },
-          ),
-
-          // Skip Button (Top Right)
-          Positioned(
-            top: 60,
-            right: 20,
-            child: TextButton(
-              onPressed: () {
-                Navigator.pushReplacementNamed(context, '/location');
-              },
-              child: const Text(
-                'Skip',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.teal,
-                  fontWeight: FontWeight.w500,
+          // Skip Button
+          Align(
+            alignment: Alignment.topRight,
+            child: Padding(
+              padding: const EdgeInsets.only(top: 40, right: 20),
+              child: TextButton(
+                onPressed: () => Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const LocationScreen())
                 ),
+                child: const Text('Skip', style: TextStyle(color: Color(0xFF1a237e))),
               ),
             ),
           ),
 
-          // Page Indicators (Bottom Center)
-          Positioned(
-            bottom: 100,
-            left: 0,
-            right: 0,
+          // Pages
+          Expanded(
+            child: PageView.builder(
+              controller: _pageController,
+              itemCount: OnboardingData.items.length,
+              onPageChanged: (page) => setState(() => _currentPage = page),
+              itemBuilder: (context, index) => OnboardingPage(
+                item: OnboardingData.items[index],
+              ),
+            ),
+          ),
+
+          // Indicators & Next Button
+          Container(
+            padding: const EdgeInsets.all(20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                OnboardingData.items.length,
-                    (index) => Container(
-                  width: 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _currentPage == index
-                        ? Colors.teal
-                        : Colors.grey.withOpacity(0.5),
+              children: [
+                // Indicators
+                ...List.generate(
+                  OnboardingData.items.length,
+                      (index) => Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: _currentPage == index ? const Color(0xFF1a237e) : Colors.grey,
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
 
-          // Next/Done Button (Bottom Right)
-          Positioned(
-            bottom: 40,
-            right: 20,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                const Spacer(),
+
+                // Next Button
+                ElevatedButton(
+                  onPressed: () {
+                    if (_currentPage < OnboardingData.items.length - 1) {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.ease,
+                      );
+                    } else {
+                      Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LocationScreen())
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1a237e),
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text(_currentPage == OnboardingData.items.length - 1 ? 'Start' : 'Next'),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              ),
-              onPressed: () {
-                if (_currentPage < OnboardingData.items.length - 1) {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.ease,
-                  );
-                } else {
-                  Navigator.pushReplacementNamed(context, '/location');
-                }
-              },
-              child: Text(
-                _currentPage == OnboardingData.items.length - 1
-                    ? 'Get Started'
-                    : 'Next',
-                style: const TextStyle(fontSize: 16),
-              ),
+              ],
             ),
           ),
         ],

@@ -15,53 +15,24 @@ class AlarmListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: ListTile(
         leading: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              alarm.formattedTime,
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal,
-              ),
-            ),
-            Text(
-              alarm.formattedDate,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
+            Text(alarm.formattedTime, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            Text(alarm.formattedDate, style: const TextStyle(fontSize: 12)),
           ],
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Toggle Switch
-            Transform.scale(
-              scale: 1.2,
-              child: Switch(
-                value: alarm.isEnabled,
-                onChanged: (value) => onToggle(),
-                activeColor: Colors.teal,
-              ),
+            Switch(
+              value: alarm.isEnabled,
+              onChanged: (_) => onToggle(),
+              activeColor: const Color(0xFF1a237e),
             ),
-            // Delete Button
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
               onPressed: onDelete,

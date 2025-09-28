@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'constants/app_strings.dart';
 import 'features/onboarding/onboarding_screen.dart';
-import 'features/location/location_screen.dart';
-import 'features/alarm/alarm_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,13 +15,19 @@ class MyApp extends StatelessWidget {
       title: AppStrings.appName,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.teal,
+        primaryColor: const Color(0xFF1a237e),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1a237e),
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1a237e),
+            foregroundColor: Colors.white,
+          ),
+        ),
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => const OnboardingScreen(),
-        '/location': (context) => const LocationScreen(),
-      },
+      home: const OnboardingScreen(),
     );
   }
 }

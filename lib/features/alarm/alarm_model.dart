@@ -1,32 +1,23 @@
-import '../../helpers/date_time_helper.dart';
+import '../../helpers/utils.dart';
 
 class Alarm {
   final String id;
   final DateTime time;
-  final String label;
   final bool isEnabled;
 
   Alarm({
     required this.id,
     required this.time,
-    this.label = 'Alarm',
     this.isEnabled = true,
   });
 
+  String get formattedTime => Utils.formatTime(time);
+  String get formattedDate => Utils.formatDate(time);
 
-  String get formattedTime => DateTimeHelper.formatTime(time);
-  String get formattedDate => DateTimeHelper.formatDate(time);
-
-  Alarm copyWith({
-    String? id,
-    DateTime? time,
-    String? label,
-    bool? isEnabled,
-  }) {
+  Alarm copyWith({bool? isEnabled}) {
     return Alarm(
-      id: id ?? this.id,
-      time: time ?? this.time,
-      label: label ?? this.label,
+      id: id,
+      time: time,
       isEnabled: isEnabled ?? this.isEnabled,
     );
   }

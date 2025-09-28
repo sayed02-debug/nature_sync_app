@@ -4,118 +4,74 @@ import 'alarm_service.dart';
 import 'alarm_list_item.dart';
 
 class AlarmScreen extends StatefulWidget {
-  final String userLocation;
-
-  const AlarmScreen({super.key, required this.userLocation});
+  final String location;
+  const AlarmScreen({super.key, required this.location});
 
   @override
   State<AlarmScreen> createState() => _AlarmScreenState();
 }
 
 class _AlarmScreenState extends State<AlarmScreen> {
-  final List<Alarm> _alarms = [];
+  List<Alarm> alarms = [];
 
   @override
   void initState() {
     super.initState();
-    _initializeNotifications();
+    AlarmService.init();
   }
 
-  Future<void> _initializeNotifications() async {
-    await AlarmService.initializeNotifications();
-  }
-
-  Future<void> _addAlarm() async {
-    // First pick a date
-    final DateTime? pickedDate = await showDatePicker(
+  Future<void> addAlarm() async {
+    final date = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime(DateTime.now().year + 1),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
     );
 
-    if (pickedDate == null) return;
+    if (date == null) return;
 
-    // Then pick a time
-    final TimeOfDay? pickedTime = await showTimePicker(
+    final time = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
     );
 
-    if (pickedTime != null) {
-      final alarmDateTime = DateTime(
-        pickedDate.year,
-        pickedDate.month,
-        pickedDate.day,
-        pickedTime.hour,
-        pickedTime.minute,
+    if (time != null) {
+      final alarmTime = DateTime(
+        date.year, date.month, date.day, time.hour, time.minute,
       );
 
-      if (alarmDateTime.isBefore(DateTime.now())) {
-        _showPastTimeError();
+      if (alarmTime.isBefore(DateTime.now())) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select future time')),
+        );
         return;
       }
 
-      final newAlarm = Alarm(
+      final alarm = Alarm(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        time: alarmDateTime,
-        label: 'Nature Alarm',
+        time: alarmTime,
       );
 
-      setState(() {
-        _alarms.add(newAlarm);
-      });
-
-      await AlarmService.scheduleAlarmNotification(newAlarm);
+      setState(() => alarms.add(alarm));
+      await AlarmService.scheduleNotification(alarm);
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Alarm set for ${newAlarm.formattedTime} on ${newAlarm.formattedDate}'),
-          backgroundColor: Colors.teal,
-        ),
+        SnackBar(content: Text('Alarm set for ${alarm.formattedTime}')),
       );
     }
   }
 
-  void _showPastTimeError() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please select a future time for the alarm'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-  void _toggleAlarm(int index) {
+  void toggleAlarm(int index) {
     setState(() {
-      _alarms[index] = _alarms[index].copyWith(
-        isEnabled: !_alarms[index].isEnabled,
+      alarms[index] = alarms[index].copyWith(
+        isEnabled: !alarms[index].isEnabled,
       );
     });
-
-    final alarm = _alarms[index];
-    if (alarm.isEnabled) {
-      AlarmService.scheduleAlarmNotification(alarm);
-    } else {
-      AlarmService.cancelAlarmNotification(alarm);
-    }
   }
 
-  Future<void> _deleteAlarm(int index) async {
-    final alarm = _alarms[index];
-
-    await AlarmService.cancelAlarmNotification(alarm);
-
-    setState(() {
-      _alarms.removeAt(index);
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Alarm deleted'),
-        backgroundColor: Colors.red,
-      ),
-    );
+  void deleteAlarm(int index) {
+    AlarmService.cancelNotification(alarms[index]);
+    setState(() => alarms.removeAt(index));
   }
 
   @override
@@ -123,119 +79,82 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Alarms'),
-        backgroundColor: Colors.teal,
+        backgroundColor: Color(0xFF1a237e),
         foregroundColor: Colors.white,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: AlarmService.testNotification,
+          ),
+        ],
       ),
       body: Column(
         children: [
-
+          // Location Box
           Container(
-            width: double.infinity,
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.teal.withOpacity(0.1),
+              color: const Color(0xFF1a237e).withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.teal.withOpacity(0.3)),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                const Text(
-                  'Selected Location',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  widget.userLocation,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
+                const Icon(Icons.location_on, color: Color(0xFF1a237e)),
+                const SizedBox(width: 10),
+                Expanded(child: Text(widget.location)),
               ],
             ),
           ),
 
-          // Alarms List Title
+          // Add Button
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Alarms',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
-                  ),
-                ),
-                // + Button for adding new alarm
-                IconButton(
-                  onPressed: _addAlarm,
-                  icon: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.teal,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: const Icon(
-                      Icons.add,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                  ),
-                ),
-              ],
+            child: ElevatedButton.icon(
+              onPressed: addAlarm,
+              icon: const Icon(Icons.add),
+              label: const Text('Add Alarm'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1a237e),
+                foregroundColor: Colors.white,
+                minimumSize: const Size(double.infinity, 50),
+              ),
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Text('Alarms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            ),
+          ),
 
           // Alarms List
           Expanded(
-            child: _alarms.isEmpty
+            child: alarms.isEmpty
                 ? const Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.alarm, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
-                  Text(
-                    'No alarms set yet',
-                    style: TextStyle(fontSize: 18, color: Colors.grey),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Tap the + button to set your first alarm',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                    textAlign: TextAlign.center,
-                  ),
+                  Text('No alarms set yet'),
                 ],
               ),
             )
                 : ListView.builder(
-              itemCount: _alarms.length,
-              itemBuilder: (context, index) {
-                return AlarmListItem(
-                  alarm: _alarms[index],
-                  onToggle: () => _toggleAlarm(index),
-                  onDelete: () => _deleteAlarm(index),
-                );
-              },
+              itemCount: alarms.length,
+              itemBuilder: (context, index) => AlarmListItem(
+                alarm: alarms[index],
+                onToggle: () => toggleAlarm(index),
+                onDelete: () => deleteAlarm(index),
+              ),
             ),
           ),
         ],
       ),
-
-
-      // ),
     );
   }
 }
